@@ -83,31 +83,12 @@ module.exports = {
     })
     .catch(e => { console.log('Error inserting item, ', e); next(e); });
   },
-  shippedItem(req, res) {
-    res.send('shippedItem');
-  },
-  updateItem(req, res) {
-    res.send('updateItem');
-  },
-  deleteItem(req, res) {
-    res.send('deleteItem');
-  },
-  boughtConfirmation(req, res) {
+  boughtConfirmation(req, res, next) {
     db.transactions.getById(req.params.id)
-    .then((tx) => {
-      db.users.getById(tx[0].seller_id)
-      .then((seller) => {
-        // The email of the seller is seller[0]['email'];
-        sendEmail(seller[0].email);
-      });
-    });
-    res.redirect('/');
-  },
-  sell(req, res) {
-    const client = new coinbase.Client({ accessToken: req.user.accessToken, refreshToken: req.user.refreshToken });
-    client.getAccounts({}, (err, accounts) => {
-      console.log(accounts);
-    });
+    .then((tx) => db.users.getById(tx[0].seller_id))
+    .then((seller) => sendEmail(seller[0].email))
+    .then(() => res.redirect('/'))
+    .catch(e => next(e));
   },
   getDisputes(req, res) {
     db.transactions.getAllDisputes()
